@@ -1,9 +1,7 @@
 <template>
   <div class="flex h-screen bg-gray-100">
 
-    
-
-
+  
     <!-- Following List Sidebar -->
     <div class="w-1/3 border-r border-gray-300 bg-white transition-all duration-300 ease-in-out"
       :class="{
@@ -319,14 +317,6 @@
             </button>
             </div>
 
-            <!-- <div class="justify-end flex">
-            <button
-              @click="showGroupInfo = true"
-              class="text-gray-500 hover:text-gray-700"
-            >
-              <Icon icon="mdi:information-outline" class="w-5 h-5" />
-            </button>
-            </div> -->
           
             </div>
 
@@ -390,21 +380,6 @@
 
 
             <!-- Reactions section -->
-            <!-- <div v-if="messageReactions[message.id]?.length > 0" class="mt-2 flex flex-wrap gap-1">
-              <div 
-                v-for="reaction in groupedReactions(messageReactions[message.id])" 
-                :key="reaction.emoji"
-                @click="toggleReaction(message.id, reaction.emoji)"
-                class="px-2 py-1 rounded-full bg-gray-100 bg-opacity-80 flex items-center cursor-pointer hover:bg-gray-200 transition-colors"
-                :class="{
-                  'bg-blue-100': hasUserReacted(message.id, reaction.emoji, user.id)
-                }"
-              >
-                <span class="text-sm mr-1">{{ reaction.emoji }}</span>
-                <span class="text-xs text-gray-600">{{ reaction.count }}</span>
-              </div>
-            </div> -->
-            <!-- Reactions section -->
             <div v-if="messageReactions[message.id]?.length > 0" class="mt-2 flex flex-wrap gap-1">
               <div 
                 v-for="reaction in groupedReactions(messageReactions[message.id])" 
@@ -464,14 +439,7 @@
             </div>
             
             <div class="mt-4 flex justify-end">
-              <!-- <button 
-                @click="showEmojiPicker = true" 
-                class="text-blue-500 hover:text-blue-700 flex items-center"
-              >
-                <Icon icon="mdi:emoticon" class="w-5 h-5 mr-1" />
-                More emojis
-              </button>
-              // In the reaction picker modal section, update the button: -->
+             
               <button 
                 @click="showReactionEmojiPicker = true" 
                 class="text-blue-500 hover:text-blue-700 flex items-center"
@@ -602,14 +570,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Group Info Modal -->
-     <!-- <GroupInfoModal 
-      v-if="showGroupInfo" 
-      :group="activeGroup"
-      :members="groupMembers"
-      @close="showGroupInfo = true"
-    />  -->
 
     <GroupInfoModal 
   v-model="showGroupInfo"
@@ -1278,56 +1238,6 @@ const setupPresenceChannel = () => {
 };
 
 
-// const showMessageNotification = (message) => {
-//   // Don't show notification if user is currently viewing this chat
-//   if (activeChat.value && activeChat.value.id === message.chat_id) {
-//     return;
-//   }
-
-//   // Find the sender's info
-//   const sender = following.value.find(u => u.id === message.sender_id);
-//   const senderName = sender?.full_name || sender?.username || 'Someone';
-  
-//   let notificationText = `${senderName}: `;
-  
-//   if (message.image_url) {
-//     notificationText += '📷 Sent an image';
-//   } else if (message.content) {
-//     // Trim long messages
-//     notificationText += message.content.length > 50 
-//       ? message.content.substring(0, 50) + '...' 
-//       : message.content;
-//   } else {
-//     notificationText += 'Sent a message';
-//   }
-
-//   // Show toast notification
-//   $toast.info(notificationText, {
-//     position: 'top-right',
-//     duration: 5000,
-//     onClick: () => {
-//       // When clicked, focus on the chat
-//       if (message.chat_id !== activeChat.value?.id) {
-//         const chat = following.value.find(u => 
-//           u.id === getOtherUser({ user1_id: user.value.id, user2_id: message.sender_id })
-//         );
-//         if (chat) {
-//           handleSelectUser(chat);
-//         }
-//       }
-//     }
-//   });
-
-//   // Also show browser notification if allowed
-//   if ('Notification' in window && Notification.permission === 'granted') {
-//     new Notification(senderName, {
-//       body: message.content || '📷 Image',
-//       icon: sender?.avatar_url || '/default-avatar.png'
-//     });
-//   }
-// };
-
-
 // Function to send broadcast notification to receiver
 const sendMessageNotification = async (message) => {
   try {
@@ -1397,133 +1307,6 @@ const showToastNotification = (message, sender) => {
     });
   }
 };
-
-
-// const setupChatChannels = (chatId) => {
-//   // Clean up previous channels
-//   if (messagesChannel.value) supabase.removeChannel(messagesChannel.value);
-//   if (typingChannel.value) supabase.removeChannel(typingChannel.value);
-//   if (readReceiptChannel.value) supabase.removeChannel(readReceiptChannel.value);
-
-//   // Messages channel - modified to handle delete differently
-//   messagesChannel.value = supabase
-//     .channel(`messages:${chatId}`)
-//     .on(
-//       'postgres_changes',
-//       {
-//         event: 'INSERT',
-//         schema: 'public',
-//         table: 'messages',
-//         filter: `chat_id=eq.${chatId}`,
-//       },
-//       async (payload) => {
-//         // Add new message
-//         if (!messages.value.some(msg => msg.id === payload.new.id)) {
-//           messages.value = [...messages.value, payload.new];
-          
-//           // If it's a message sent TO the current user (not by them)
-//           if (payload.new.sender_id !== user.value.id) {
-//             showMessageNotification(payload.new);
-//           }
-
-//           // If it's our message, track delivery when received by server
-//           if (payload.new.sender_id === user.value.id) {
-//             await trackMessageDelivery(payload.new.id);
-
-//             // SEND BROADCAST NOTIFICATION TO RECEIVER
-//             await sendMessageNotification(payload.new);
-//           }
-//         }
-//       }
-//     )
-//     .on(
-//       'postgres_changes',
-//       {
-//         event: 'UPDATE',
-//         schema: 'public',
-//         table: 'messages',
-//         filter: `chat_id=eq.${chatId}`,
-//       },
-//       (payload) => {
-//         // Update message status
-//         messages.value = messages.value.map(msg => 
-//           msg.id === payload.new.id ? payload.new : msg
-//         );
-//       }
-//     )
-//     .on(
-//       'postgres_changes',
-//       {
-//         event: 'DELETE',
-//         schema: 'public',
-//         table: 'messages',
-//       },
-//       (payload) => {
-//         // Handle delete without chat_id filter
-//         messages.value = messages.value.filter(msg => msg.id !== payload.old.id);
-//       }
-//     )
-//     .subscribe();
-
-    
-
-//   // Rest of your channel setup remains the same...
-//   readReceiptChannel.value = supabase
-//     .channel(`read_receipts:${chatId}`)
-//     .on(
-//       'postgres_changes',
-//       {
-//         event: 'UPDATE',
-//         schema: 'public',
-//         table: 'messages',
-//         filter: `chat_id=eq.${chatId}`,
-//       },
-//       (payload) => {
-//         messages.value = messages.value.map(msg => 
-//           msg.id === payload.new.id ? payload.new : msg
-//         );
-//       }
-//     )
-//     .subscribe();
-
-//   // Typing indicator channel (existing)
-//   typingChannel.value = supabase.channel(`typing:${chatId}`, {
-//     config: {
-//       broadcast: { ack: true, self: false }
-//     }
-//   }).on('broadcast', { event: 'typing' }, (payload) => {
-//     if (payload.payload.user_id !== user.value.id) {
-//       isTyping.value = true;
-//       typingUser.value = payload.payload.user_id;
-//       clearTimeout(typingTimeoutRef.value);
-//       typingTimeoutRef.value = setTimeout(() => {
-//         isTyping.value = false;
-//         typingUser.value = null;
-//       }, 2000);
-//     }
-//   }).subscribe();
-
-//   // Create dedicated notification channel for THIS USER
-//   const notificationChannel = supabase.channel(`notifications:${user.value.id}`, {
-//     config: {
-//       broadcast: { ack: true, self: false }
-//     }
-//   });
-
-//   notificationChannel
-//     .on('broadcast', { event: 'new_message' }, (payload) => {
-//       const { message, sender } = payload.payload;
-      
-//       // Only show notification if not currently viewing the chat
-//       if (!activeChat.value || activeChat.value.id !== message.chat_id) {
-//         showToastNotification(message, sender);
-//       }
-//     })
-//     .subscribe();
-
-//   // Store the notification channel
-//   notificationChannels.value[chatId] = notificationChannel;
-// };
 
 
 const setupChatChannels = (chatId) => {
@@ -1688,12 +1471,6 @@ const handleVisibilityChange = () => {
   }
 };
 
-// Track scroll position to detect message visibility
-// const handleScroll = () => {
-//   if (isChatVisible()) {
-//     markMessagesAsRead();
-//   }
-// };
 
 
 
@@ -1833,71 +1610,6 @@ const sendGroupMessage = async () => {
     uploading.value = false;
   }
 };
-
-// const setupGroupChannels = (groupId) => {
-//   // Clean up previous group channel if exists
-//   if (groupChannel.value) {
-//     supabase.removeChannel(groupChannel.value);
-//   }
-
-//   groupChannel.value = supabase
-//     .channel(`group:${groupId}`)
-//     .on(
-//       'postgres_changes',
-//       {
-//         event: 'INSERT',
-//         schema: 'public',
-//         table: 'group_messages',
-//         filter: `group_id=eq.${groupId}`,
-//       },
-//       (payload) => {
-//         if (!groupMessages.value.some(msg => msg.id === payload.new.id)) {
-//           groupMessages.value = [...groupMessages.value, payload.new];
-//         }
-//         nextTick(() => {
-//           groupMessagesEndRef.value?.scrollIntoView({ behavior: 'smooth' });
-//         });
-//       }
-//     )
-//     .on(
-//       'postgres_changes',
-//       {
-//         event: 'UPDATE',
-//         schema: 'public',
-//         table: 'group_messages',
-//         filter: `group_id=eq.${groupId}`,
-//       },
-//       (payload) => {
-//         groupMessages.value = groupMessages.value.map(msg => 
-//           msg.id === payload.new.id ? payload.new : msg
-//         );
-//       }
-//     )
-//     .on(
-//       'postgres_changes',
-//       {
-//         event: 'DELETE',
-//         schema: 'public',
-//         table: 'group_messages',
-//       },
-//       (payload) => {
-//         groupMessages.value = groupMessages.value.filter(msg => msg.id !== payload.old.id);
-//       }
-//     )
-//     .on(
-//       'postgres_changes',
-//       {
-//         event: '*',
-//         schema: 'public',
-//         table: 'group_members',
-//         filter: `group_id=eq.${groupId}`,
-//       },
-//       () => {
-//         fetchGroupMembers();
-//       }
-//     )
-//     .subscribe();
-// };
 
 const setupGroupChannels = (groupId) => {
   // Clean up previous group channel if exists
@@ -2134,15 +1846,6 @@ watch(groupMessages, () => {
   });
 }, { deep: true });
 
-// onUnmounted(() => {
-//   // Clean up all channels when component is unmounted
-//   if (presenceChannel.value) supabase.removeChannel(presenceChannel.value);
-//   if (messagesChannel.value) supabase.removeChannel(messagesChannel.value);
-//   if (typingChannel.value) supabase.removeChannel(typingChannel.value);
-//   if (readReceiptChannel.value) supabase.removeChannel(readReceiptChannel.value);
-//   if (groupChannel.value) supabase.removeChannel(groupChannel.value);
-//   clearTimeout(typingTimeoutRef.value);
-// });
 
 onUnmounted(() => {
   // Clean up all channels when component is unmounted
