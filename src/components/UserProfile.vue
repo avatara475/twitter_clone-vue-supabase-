@@ -73,12 +73,12 @@
             </div>
           </div>
 
-          <div class="flex mt-4 space-x-5">
-            <div class="hover:underline cursor-pointer">
+          <div class="flex mt-4 space-x-5"> 
+            <div class="hover:underline cursor-pointer" @click="openFollowModal('following')">
               <span class="font-bold text-white">{{ profile?.following_count || 0 }}</span> 
               <span class="text-gray-400"> Following</span>
             </div>
-            <div class="hover:underline cursor-pointer">
+            <div class="hover:underline cursor-pointer" @click="openFollowModal('followers')">
               <span class="font-bold text-white">{{ followersCount }}</span> 
               <span class="text-gray-400"> Followers</span>
             </div>
@@ -249,6 +249,13 @@
         </div>
       </div>
     </div>
+    <!-- Add the FollowModal component at the end -->
+    <FollowModal 
+      :isOpen="isFollowModalOpen"
+      :type="followModalType"
+      :userId="profile?.id"
+      @onClose="isFollowModalOpen = false"
+    />
   </div>
 </template>
 
@@ -258,6 +265,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { supabase } from '../components/lib/supabaseClient';
 import { format, parseISO } from 'date-fns';
 import { Icon } from '@iconify/vue';
+import FollowModal from './Profile/FollowModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -278,6 +286,16 @@ const isFollowing = ref(false);
 const followersCount = ref(0);
 // const replyInput = ref(null);
 const replyText = ref('');
+
+// Add these new reactive variables
+const isFollowModalOpen = ref(false)
+const followModalType = ref('followers') // 'followers' or 'following'
+
+// Add this function to open the follow modal
+const openFollowModal = (type) => {
+  followModalType.value = type
+  isFollowModalOpen.value = true
+}
 
 const formatDate = (dateString) => {
   try {
@@ -319,7 +337,8 @@ const fetchProfileData = async () => {
       .from('profiles')
       .select(`
         *,
-        followers:follows!follows_following_id_fkey(count)
+        followers:follows!follows_following_id_fkey(count),
+        following:follows!follows_follower_id_fkey(count)
       `)
       .eq('id', userId)
       .single();
@@ -343,6 +362,8 @@ const fetchProfileData = async () => {
 
     // Set followers count from the query
     followersCount.value = profileData.followers?.[0]?.count || 0;
+    const followingCount = profileData.following?.[0]?.count || 0;
+
 
     // Fetch user posts with author details and like status
     const { data: postsData, error: postsError } = await supabase
@@ -374,7 +395,13 @@ const fetchProfileData = async () => {
       replies: []
     }));
 
-    profile.value = profileData;
+    // profile.value = profileData;
+    // Add counts to profile data
+    profile.value = {
+      ...profileData,
+      following_count: followingCount,
+      followers_count: followersCount.value
+    };
     posts.value = enhancedPosts;
     loading.value = false;
   } catch (err) {

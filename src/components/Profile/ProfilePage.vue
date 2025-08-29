@@ -7,6 +7,7 @@ import PostModal from './PostModal.vue'
 import PostList from './PostList.vue'
 import LikedPost from './LikedPost.vue'
 import RepliesPosts from './RepliesPosts.vue'
+import FollowModal from './FollowModal.vue'
 
 const props = defineProps({
   session: Object
@@ -200,6 +201,16 @@ const handleSubmit = async (e) => {
 const handlePostCreated = (newPost) => {
   console.log('New post created:', newPost)
 }
+
+// Add these new reactive variables
+const isFollowModalOpen = ref(false)
+const followModalType = ref('followers') // 'followers' or 'following'
+
+// Add this function to open the follow modal
+const openFollowModal = (type) => {
+  followModalType.value = type
+  isFollowModalOpen.value = true
+}
 </script>
 
 <template>
@@ -285,11 +296,11 @@ const handlePostCreated = (newPost) => {
           </div>
           
           <div class="flex mt-4 space-x-5">
-            <div class="flex items-center">
+            <div class="flex items-center cursor-pointer" @click="openFollowModal('following')">
               <span class="font-bold dark:text-white">{{ profile.following_count || 0 }}</span>
               <span class="ml-1 text-gray-500">Following</span>
             </div>
-            <div class="flex items-center">
+            <div class="flex items-center cursor-pointer" @click="openFollowModal('followers')">
               <span class="font-bold dark:text-white">{{ profile.followers_count || 0 }}</span>
               <span class="ml-1 text-gray-500">Followers</span>
             </div>
@@ -471,6 +482,13 @@ const handlePostCreated = (newPost) => {
       :isOpen="isPostModalOpen"
       @onClose="isPostModalOpen = false"
       @onPostCreated="handlePostCreated"
+    />
+
+    <FollowModal 
+      :isOpen="isFollowModalOpen"
+      :type="followModalType"
+      :userId="profile?.id"
+      @onClose="isFollowModalOpen = false"
     />
   </div>
 </template>
